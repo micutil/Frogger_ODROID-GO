@@ -2,8 +2,17 @@
 //By Pappani Federico
 //federicopappani.it
 
+/******************************************************************************/
+//Modified by Micutil
+//Added launcher code for SD-Update / LovyanLauncher.
+//Added binary for Odroid-GO (using ESP32-Chimera-Core).
+/******************************************************************************/
+
 //libraries
-#include <odroid_go.h>
+#include <M5Stack.h>
+#include "M5StackUpdater.h"
+
+//#include <odroid_go.h> //comment out by micono
 //#include <EEPROM.h>
 //Screen size is 320x240
 
@@ -61,16 +70,28 @@ void setup(){
   //File save = SD.open("/frogger_score.txt");
   //if (!save) SD.("/frogger_score.txt", "0");
   //highestScore = save.read().toInt();
-  Serial.begin(115200);
-  Serial.println("Frogger ODROID-GO | federicopappani.it");
+
+  //comment out by micono
+  //Serial.begin(115200);
+  //Serial.println("Frogger ODROID-GO | federicopappani.it");
+  
   //Serial.print("Highest score: ");
   //Serial.print(highestScore);
   //pinMode(25, OUTPUT);
   //pinMode(26, OUTPUT);
   //digitalWrite(25, HIGH);
   //digitalWrite(26, HIGH);
-  GO.begin();
-  GO.Speaker.setVolume(0);
+
+  M5.begin();
+  Wire.begin();
+  if(digitalRead(BUTTON_A_PIN) == 0) {
+    Serial.println("Will Load menu binary");
+    updateFromFS(SD);
+    ESP.restart();
+  }
+  
+  //GO.begin();
+  //GO.Speaker.setVolume(0);
 }
 
 void loop(){
@@ -83,7 +104,7 @@ void gameloop(){
   drawFixed();
   while(1){
   pressed = false;
-  GO.update();
+  M5.update();
   checkMovements();
   printBg();
   printTrees();
@@ -95,9 +116,9 @@ void gameloop(){
   if (!pressed) checkMovements();
   moveIfClipped();
   if (lifes > 0){
-    GO.lcd.setTextSize(1);
-    GO.lcd.setCursor(310, 5);
-    GO.lcd.print(lifes);
+    M5.lcd.setTextSize(1);
+    M5.lcd.setCursor(310, 5);
+    M5.lcd.print(lifes);
   }
   else {break;}
   delay(30);
@@ -106,18 +127,18 @@ void gameloop(){
   }
   
 void drawFixed(){
-  GO.lcd.setBrightness(screenBl);
-  GO.lcd.fillScreen(BLACK);
-  //GO.lcd.drawJpgFile(SD, "/top_bg.jpg", 0);
-  GO.lcd.setTextColor(WHITE);
-  GO.lcd.setTextSize(2);
-  GO.lcd.setCursor(2, 0);
-  GO.lcd.print("Frogger ODROID-GO ");
-  GO.lcd.drawFastVLine(211, 0, 17, WHITE);
-  GO.lcd.setCursor(1, 232);
-  GO.lcd.fillRect(0, 230, 320, 240, BLACK);
+  M5.lcd.setBrightness(screenBl);
+  M5.lcd.fillScreen(BLACK);
+  //M5.lcd.drawJpgFile(SD, "/top_bg.jpg", 0);
+  M5.lcd.setTextColor(WHITE);
+  M5.lcd.setTextSize(2);
+  M5.lcd.setCursor(2, 0);
+  M5.lcd.print("Frogger ODROID-GO ");
+  M5.lcd.drawFastVLine(211, 0, 17, WHITE);
+  M5.lcd.setCursor(1, 232);
+  M5.lcd.fillRect(0, 230, 320, 240, BLACK);
   printScore();
-  //GO.lcd.print("federicopappani.it - 2019");
+  //M5.lcd.print("federicopappani.it - 2019");
   }
 
 void checkCollisions(){
@@ -160,94 +181,94 @@ void moveIfClipped(){
   }
 
 void printTrees(){
-  GO.lcd.fillRect(tree1_x, tree1_y, 50, 10, TREE1);
-  GO.lcd.fillRect(tree2_x, tree2_y, 65, 10, STREET);
-  GO.lcd.fillRect(tree3_x, tree3_y, 50, 10, TREE1);
-  GO.lcd.fillRect(tree4_x, tree4_y, 65, 10, STREET);
-  GO.lcd.fillRect(tree5_x, tree5_y, 50, 10, TREE1);
+  M5.lcd.fillRect(tree1_x, tree1_y, 50, 10, TREE1);
+  M5.lcd.fillRect(tree2_x, tree2_y, 65, 10, STREET);
+  M5.lcd.fillRect(tree3_x, tree3_y, 50, 10, TREE1);
+  M5.lcd.fillRect(tree4_x, tree4_y, 65, 10, STREET);
+  M5.lcd.fillRect(tree5_x, tree5_y, 50, 10, TREE1);
   }
   
 void printBg(){
   //bg blocks
-  GO.lcd.fillRect(0, 18, 320, 22, GRASS);
-  GO.lcd.fillRect(0, 40, 320, 81, WATER);
-  GO.lcd.fillRect(0, 121, 320, 15, BROWN);
-  GO.lcd.fillRect(0, 136, 320, 80, STREET);
-  GO.lcd.fillRect(0, 216, 320, 15, BROWN);
-  GO.lcd.fillCircle(312, 8, 6, RED);
+  M5.lcd.fillRect(0, 18, 320, 22, GRASS);
+  M5.lcd.fillRect(0, 40, 320, 81, WATER);
+  M5.lcd.fillRect(0, 121, 320, 15, BROWN);
+  M5.lcd.fillRect(0, 136, 320, 80, STREET);
+  M5.lcd.fillRect(0, 216, 320, 15, BROWN);
+  M5.lcd.fillCircle(312, 8, 6, RED);
   //road lines
-  GO.lcd.drawFastHLine(0, 152, 40, MLINE);
-  GO.lcd.drawFastHLine(0, 168, 40, MLINE);
-  GO.lcd.drawFastHLine(0, 184, 40, MLINE);
-  GO.lcd.drawFastHLine(0, 200, 40, MLINE);
-  GO.lcd.drawFastHLine(80, 152, 60, MLINE);
-  GO.lcd.drawFastHLine(80, 168, 60, MLINE);
-  GO.lcd.drawFastHLine(80, 184, 60, MLINE);
-  GO.lcd.drawFastHLine(80, 200, 60, MLINE);
-  GO.lcd.drawFastHLine(180, 152, 60, MLINE);
-  GO.lcd.drawFastHLine(180, 168, 60, MLINE);
-  GO.lcd.drawFastHLine(180, 184, 60, MLINE);
-  GO.lcd.drawFastHLine(180, 200, 60, MLINE);
-  GO.lcd.drawFastHLine(280, 152, 40, MLINE);
-  GO.lcd.drawFastHLine(280, 168, 40, MLINE);
-  GO.lcd.drawFastHLine(280, 184, 40, MLINE);
-  GO.lcd.drawFastHLine(280, 200, 40, MLINE);
+  M5.lcd.drawFastHLine(0, 152, 40, MLINE);
+  M5.lcd.drawFastHLine(0, 168, 40, MLINE);
+  M5.lcd.drawFastHLine(0, 184, 40, MLINE);
+  M5.lcd.drawFastHLine(0, 200, 40, MLINE);
+  M5.lcd.drawFastHLine(80, 152, 60, MLINE);
+  M5.lcd.drawFastHLine(80, 168, 60, MLINE);
+  M5.lcd.drawFastHLine(80, 184, 60, MLINE);
+  M5.lcd.drawFastHLine(80, 200, 60, MLINE);
+  M5.lcd.drawFastHLine(180, 152, 60, MLINE);
+  M5.lcd.drawFastHLine(180, 168, 60, MLINE);
+  M5.lcd.drawFastHLine(180, 184, 60, MLINE);
+  M5.lcd.drawFastHLine(180, 200, 60, MLINE);
+  M5.lcd.drawFastHLine(280, 152, 40, MLINE);
+  M5.lcd.drawFastHLine(280, 168, 40, MLINE);
+  M5.lcd.drawFastHLine(280, 184, 40, MLINE);
+  M5.lcd.drawFastHLine(280, 200, 40, MLINE);
   //rocks
-  GO.lcd.fillCircle(31, 223, 3, ROCKS);
-  GO.lcd.fillCircle(76, 228, 2, ROCKS);
-  GO.lcd.fillCircle(103, 225, 1, ROCKS);
-  GO.lcd.fillCircle(150, 223, 2, STREET);
-  GO.lcd.fillCircle(204, 224, 2, STREET);
-  GO.lcd.fillCircle(273, 226, 3, ROCKS);
-  GO.lcd.fillCircle(315, 221, 1, ROCKS);
-  GO.lcd.fillCircle(80, 129, 2, STREET);
-  GO.lcd.fillCircle(31, 131, 3, ROCKS);
-  GO.lcd.fillCircle(171, 130, 1, ROCKS);
-  GO.lcd.fillCircle(238, 125, 3, ROCKS);
-  GO.lcd.fillCircle(312, 131, 1, STREET);
-  GO.lcd.fillCircle(118, 123, 2, STREET);
+  M5.lcd.fillCircle(31, 223, 3, ROCKS);
+  M5.lcd.fillCircle(76, 228, 2, ROCKS);
+  M5.lcd.fillCircle(103, 225, 1, ROCKS);
+  M5.lcd.fillCircle(150, 223, 2, STREET);
+  M5.lcd.fillCircle(204, 224, 2, STREET);
+  M5.lcd.fillCircle(273, 226, 3, ROCKS);
+  M5.lcd.fillCircle(315, 221, 1, ROCKS);
+  M5.lcd.fillCircle(80, 129, 2, STREET);
+  M5.lcd.fillCircle(31, 131, 3, ROCKS);
+  M5.lcd.fillCircle(171, 130, 1, ROCKS);
+  M5.lcd.fillCircle(238, 125, 3, ROCKS);
+  M5.lcd.fillCircle(312, 131, 1, STREET);
+  M5.lcd.fillCircle(118, 123, 2, STREET);
   }
   
 void checkMovements(){
   pressed = true;
   if (movement >= 2) movement = 0;
-  if ((GO.JOY_Y.isAxisPressed() == 2) && (movement == 0)) {frog_y -= 16; movement ++; clipped = 0; delta = 0;}
-  else if ((GO.JOY_Y.isAxisPressed() == 1) && (movement == 0)) {frog_y += 16; movement ++; clipped = 0; delta = 0;}
-  else if ((GO.JOY_X.isAxisPressed() == 2) && (movement == 0)) {frog_x -= 16; movement ++;}
-  else if ((GO.JOY_X.isAxisPressed() == 1) && (movement == 0)) {frog_x += 16; movement ++;}
+  if ((M5.JOY_Y.isAxisPressed() == 2) && (movement == 0)) {frog_y -= 16; movement ++; clipped = 0; delta = 0;}
+  else if ((M5.JOY_Y.isAxisPressed() == 1) && (movement == 0)) {frog_y += 16; movement ++; clipped = 0; delta = 0;}
+  else if ((M5.JOY_X.isAxisPressed() == 2) && (movement == 0)) {frog_x -= 16; movement ++;}
+  else if ((M5.JOY_X.isAxisPressed() == 1) && (movement == 0)) {frog_x += 16; movement ++;}
   else movement ++;
   if ((frog_x < 0) && (clipped == 0)) {frog_x += 16;}
   if ((frog_x > 300) && (clipped == 0)) {frog_x -= 16;}
   if ((frog_y > 233) && (clipped == 0)) {frog_y -= 16;}
   if ((frog_y < 17) && (clipped == 0)) {frog_y += 16;}
-  if (GO.BtnStart.isPressed() == 1 && screenBl < 175){
+  if (M5.BtnStart.isPressed() == 1 && screenBl < 175){
     screenBl += 50;
-    GO.lcd.setBrightness(screenBl);
+    M5.lcd.setBrightness(screenBl);
     }
-  else if (GO.BtnSelect.isPressed() == 1 && screenBl > 75){
+  else if (M5.BtnSelect.isPressed() == 1 && screenBl > 75){
     screenBl -= 50;
-    GO.lcd.setBrightness(screenBl);
+    M5.lcd.setBrightness(screenBl);
   }
-  //if (GO.BtnVolume.isPressed() == 1) if (!volume) {GO.Speaker.setVolume(3); volume = true;} else {GO.Speaker.setVolume(0); volume = false;}
+  //if (M5.BtnVolume.isPressed() == 1) if (!volume) {M5.Speaker.setVolume(3); volume = true;} else {M5.Speaker.setVolume(0); volume = false;}
     
   }
   
 void printFrog(){
-  GO.lcd.fillRect(frog_x, frog_y, 13, 10, FROGCOL);
+  M5.lcd.fillRect(frog_x, frog_y, 13, 10, FROGCOL);
   //eyes
-  GO.lcd.fillRect(frog_x, frog_y, 3, 3, RED);
-  GO.lcd.fillRect(frog_x + 10, frog_y, 3, 3, RED);
+  M5.lcd.fillRect(frog_x, frog_y, 3, 3, RED);
+  M5.lcd.fillRect(frog_x + 10, frog_y, 3, 3, RED);
   //legs
-  GO.lcd.fillRect(frog_x, frog_y + 7, 4, 1, BLACK);
-  GO.lcd.fillRect(frog_x + 9, frog_y + 7, 4, 1, BLACK);
+  M5.lcd.fillRect(frog_x, frog_y + 7, 4, 1, BLACK);
+  M5.lcd.fillRect(frog_x + 9, frog_y + 7, 4, 1, BLACK);
   }
 
 void printScore(){
-  GO.lcd.fillRect(216, 0, 65, 20, BLACK);
-  GO.lcd.setCursor(217, 0);
-  GO.lcd.setTextSize(2);
-  GO.lcd.setTextColor(WHITE);
-  GO.lcd.print(score);
+  M5.lcd.fillRect(216, 0, 65, 20, BLACK);
+  M5.lcd.setCursor(217, 0);
+  M5.lcd.setTextSize(2);
+  M5.lcd.setTextColor(WHITE);
+  M5.lcd.print(score);
   }
   
 void moveObjects(){
@@ -270,64 +291,75 @@ void moveObjects(){
 
 void printCars(){
   //car1
-  GO.lcd.fillRect(car1_x, car1_y, 20, 10, RED);
-  GO.lcd.fillRect(car1_x + 18, car1_y, 2, 2, YELLOW);
-  GO.lcd.fillRect(car1_x + 18, car1_y + 8, 2, 2, YELLOW);
+  M5.lcd.fillRect(car1_x, car1_y, 20, 10, RED);
+  M5.lcd.fillRect(car1_x + 18, car1_y, 2, 2, YELLOW);
+  M5.lcd.fillRect(car1_x + 18, car1_y + 8, 2, 2, YELLOW);
   //car2
-  GO.lcd.fillRect(car2_x, car2_y, 20, 10, WHITE);
-  GO.lcd.fillRect(car2_x, car2_y, 2, 2, ORANGE);
-  GO.lcd.fillRect(car2_x, car2_y + 8, 2, 2, ORANGE);
-  GO.lcd.drawFastHLine(car2_x + 4, car2_y + 5, 9, MLINE);
-  GO.lcd.drawFastVLine(car2_x + 4, car2_y, 10, BLACK);
+  M5.lcd.fillRect(car2_x, car2_y, 20, 10, WHITE);
+  M5.lcd.fillRect(car2_x, car2_y, 2, 2, ORANGE);
+  M5.lcd.fillRect(car2_x, car2_y + 8, 2, 2, ORANGE);
+  M5.lcd.drawFastHLine(car2_x + 4, car2_y + 5, 9, MLINE);
+  M5.lcd.drawFastVLine(car2_x + 4, car2_y, 10, BLACK);
   //car3
-  GO.lcd.fillRect(car3_x, car3_y, 20, 10, BLUE);
-  GO.lcd.fillRect(car3_x + 18, car3_y, 2, 2, YELLOW);
-  GO.lcd.fillRect(car3_x + 18, car3_y + 8, 2, 2, YELLOW);
+  M5.lcd.fillRect(car3_x, car3_y, 20, 10, BLUE);
+  M5.lcd.fillRect(car3_x + 18, car3_y, 2, 2, YELLOW);
+  M5.lcd.fillRect(car3_x + 18, car3_y + 8, 2, 2, YELLOW);
   //car4
-  GO.lcd.fillRect(car4_x, car4_y, 20, 10, RED);
-  GO.lcd.fillRect(car4_x, car4_y, 2, 2, YELLOW);
-  GO.lcd.fillRect(car4_x, car4_y + 8, 2, 2, YELLOW);
+  M5.lcd.fillRect(car4_x, car4_y, 20, 10, RED);
+  M5.lcd.fillRect(car4_x, car4_y, 2, 2, YELLOW);
+  M5.lcd.fillRect(car4_x, car4_y + 8, 2, 2, YELLOW);
   //car5
-  GO.lcd.fillRect(car5_x, car5_y, 20, 10, BLUE);
-  GO.lcd.fillRect(car5_x + 18, car5_y, 2, 2, YELLOW);
-  GO.lcd.fillRect(car5_x + 18, car5_y + 8, 2, 2, YELLOW);
+  M5.lcd.fillRect(car5_x, car5_y, 20, 10, BLUE);
+  M5.lcd.fillRect(car5_x + 18, car5_y, 2, 2, YELLOW);
+  M5.lcd.fillRect(car5_x + 18, car5_y + 8, 2, 2, YELLOW);
 }
 
 void intro(){
-  GO.lcd.setRotation(1);
+  //M5.lcd.setRotation(1); //Comment out by micono
   Serial.println("Frogger by Pappani Federico");
-  GO.lcd.setTextColor(WHITE);
-  //GO.lcd.fillCircle(160, 50, 30, ROSETEST);
-  GO.lcd.setCursor(100, 50);
-  GO.lcd.setTextColor(GREEN);
-  GO.lcd.setTextSize(3);
-  GO.lcd.print("Frogger");
-  GO.lcd.setCursor(57, 100);
-  GO.lcd.setTextSize(2);
-  GO.lcd.setTextColor(WHITE);
-  GO.lcd.print("ODROID-GO Version");
-  GO.lcd.setCursor(63, 130);
-  GO.lcd.setTextColor(RED);
-  GO.lcd.print("Press A to start");
-  GO.lcd.setTextSize(1);
-  GO.lcd.setTextColor(WHITE);
-  GO.lcd.setCursor(83, 200);
-  GO.lcd.print("federicopappani.it - 2019");
-  //delay(3000);
+  M5.lcd.setTextColor(WHITE);
+  //M5.lcd.fillCircle(160, 50, 30, ROSETEST);
+  M5.lcd.setCursor(100, 50);
+  M5.lcd.setTextColor(GREEN);
+  M5.lcd.setTextSize(3);
+  M5.lcd.print("Frogger");
+  M5.lcd.setCursor(57, 100);
+  M5.lcd.setTextSize(2);
+  M5.lcd.setTextColor(WHITE);
+  #ifdef ARDUINO_ODROID_ESP32
+  M5.lcd.print("ODROID-GO Version");
+  #else
+  M5.lcd.print("M5Stack Version");
+  #endif
+  M5.lcd.setCursor(63, 130);
+  M5.lcd.setTextColor(RED);
+  M5.lcd.print("Press A to start");
+
+  M5.lcd.setTextSize(1);
+  M5.lcd.setTextColor(WHITE);
+  M5.lcd.setCursor(83, 180);
+  M5.lcd.print("federicopappani.it - 2019");
+
+  M5.lcd.setTextSize(2);
+  M5.lcd.setTextColor(TFT_CYAN);
+  M5.lcd.setCursor(50, 190);
+  M5.lcd.print("Modified by micutil");
+
+//delay(3000);
   while(1){
-    if(GO.BtnA.isPressed() == 1) break;
-    GO.update();
+    if(M5.BtnA.isPressed() == 1) break;
+    M5.update();
     }
-  GO.update();
+  M5.update();
   }
 
 void gameover(){
-  GO.lcd.fillScreen(BLACK);
-  GO.lcd.setTextSize(3);
-  GO.lcd.setCursor(75, 50);
-  GO.lcd.setTextColor(RED);
-  GO.lcd.print("Game Over!\n\n    Score: ");
-  GO.lcd.print(score);
+  M5.lcd.fillScreen(BLACK);//M5.lcd.fillScreen(BLACK);
+  M5.lcd.setTextSize(3);
+  M5.lcd.setCursor(75, 50);
+  M5.lcd.setTextColor(RED);
+  M5.lcd.print("Game Over!\n\n    Score: ");
+  M5.lcd.print(score);
   //if (score > highestScore){
   //  save.write("frogger_score.txt", score);
   //  Serial.println("Score updated!");
@@ -336,7 +368,7 @@ void gameover(){
   delay(3000);
   delta = 0;
   clipped = false;
-  GO.lcd.fillScreen(BLACK);
+  M5.lcd.fillScreen(BLACK);
   score = 0;
   dead();
   lifes = 3;
@@ -344,8 +376,8 @@ void gameover(){
 
 void win(){
   score += 100;
-  //GO.Speaker.tone(700, 30);
-  //GO.Speaker.tone(1050, 50);
+  //M5.Speaker.tone(700, 30);
+  //M5.Speaker.tone(1050, 50);
   delay(500);
   frog_x = 155;
   frog_y = 220;
