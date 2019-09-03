@@ -100,7 +100,7 @@ void loop(){
   intro();
   gameloop();
   gameover();
-  }
+}
 
 void gameloop(){
   drawFixed();
@@ -185,8 +185,8 @@ void moveIfClipped(){
       break;
     default:
       break;
-    }
   }
+}
 
 void printTrees(){
   M5.lcd.fillRect(tree1_x, tree1_y, 50, 10, TREE1);
@@ -238,18 +238,18 @@ void printBg(){
   }
   
 void checkMovements(){
-  pressed = true;
+  //pressed = true;
   if (movement >= 2) movement = 0;
   #ifdef ARDUINO_ODROID_ESP32
-  if ((M5.JOY_Y.isAxisPressed() == 2) && (movement == 0)) {frog_y -= 16; movement ++; clipped = 0; delta = 0;}
-  else if ((M5.JOY_Y.isAxisPressed() == 1) && (movement == 0)) {frog_y += 16; movement ++; clipped = 0; delta = 0;}
-  else if ((M5.JOY_X.isAxisPressed() == 2) && (movement == 0)) {frog_x -= 16; movement ++;}
-  else if ((M5.JOY_X.isAxisPressed() == 1) && (movement == 0)) {frog_x += 16; movement ++;}
+  if ((M5.JOY_Y.wasAxisPressed() == 2) && (movement == 0)) {frog_y -= 16; movement ++; clipped = 0; delta = 0; pressed = true;}
+  else if ((M5.JOY_Y.wasAxisPressed() == 1) && (movement == 0)) {frog_y += 16; movement ++; clipped = 0; delta = 0; pressed = true;}
+  else if ((M5.JOY_X.isAxisPressed() == 2) && (movement == 0)) {frog_x -= 16; movement ++; pressed = true;}
+  else if ((M5.JOY_X.isAxisPressed() == 1) && (movement == 0)) {frog_x += 16; movement ++; pressed = true;}
   #else
-  if ((M5.BtnA.isPressed()) && (movement == 0)) {frog_y -= 16; movement ++; clipped = 0; delta = 0;}
-  //else if ((M5.BtnA.isPressed()) && (movement == 0)) {frog_y += 16; movement ++; clipped = 0; delta = 0;}
-  else if ((M5.BtnB.isPressed()) && (movement == 0)) {frog_x -= 16; movement ++;}
-  else if ((M5.BtnC.isPressed()) && (movement == 0)) {frog_x += 16; movement ++;}
+  if ((M5.BtnA.isPressed()) && (movement == 0)) {frog_y -= 16; movement ++; clipped = 0; delta = 0; pressed = true;}
+  //else if ((M5.BtnA.isPressed()) && (movement == 0)) {frog_y += 16; movement ++; clipped = 0; delta = 0; pressed = true;}
+  else if ((M5.BtnB.isPressed()) && (movement == 0)) {frog_x -= 16; movement ++; pressed = true;}
+  else if ((M5.BtnC.isPressed()) && (movement == 0)) {frog_x += 16; movement ++; pressed = true;}
   #endif
   else movement ++;
   if ((frog_x < 0) && (clipped == 0)) {frog_x += 16;}
