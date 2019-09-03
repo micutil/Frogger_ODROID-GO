@@ -12,7 +12,7 @@
 #include <M5Stack.h>
 #include "M5StackUpdater.h"
 
-int delayTime=50;
+int delayTime=10;
 
 //#include <odroid_go.h> //comment out by micono
 //#include <EEPROM.h>
@@ -108,14 +108,17 @@ void gameloop(){
     pressed = false;
     M5.update();
     checkMovements();
+    delay(delayTime);
     printBg();
     printTrees();
     printFrog();
     if (!pressed) checkMovements();
+    delay(delayTime);
     moveObjects();
     printCars();
     checkCollisions();
     if (!pressed) checkMovements();
+    delay(delayTime);
     moveIfClipped();
     if (lifes > 0){
       M5.lcd.setTextSize(1);
@@ -123,8 +126,9 @@ void gameloop(){
       M5.lcd.print(lifes);
     }
     else {break;}
-    delay(delayTime);
+    delay(delayTime);//
     if (!pressed) checkMovements();
+    delay(delayTime);
   }
 }
   
@@ -340,8 +344,8 @@ void printCars(){
 }
 
 void setDeleyTime(int v) {
-  delayTime=delayTime+v*10;
-  if(delayTime<10) delayTime=10;
+  delayTime=delayTime+v*2;
+  if(delayTime<2) delayTime=2;
   printDelayTime();
 }
 
