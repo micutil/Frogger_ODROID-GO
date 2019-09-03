@@ -12,6 +12,8 @@
 #include <M5Stack.h>
 #include "M5StackUpdater.h"
 
+int delayTime=50;
+
 //#include <odroid_go.h> //comment out by micono
 //#include <EEPROM.h>
 //Screen size is 320x240
@@ -103,28 +105,28 @@ void loop(){
 void gameloop(){
   drawFixed();
   while(1){
-  pressed = false;
-  M5.update();
-  checkMovements();
-  printBg();
-  printTrees();
-  printFrog();
-  if (!pressed) checkMovements();
-  moveObjects();
-  printCars();
-  checkCollisions();
-  if (!pressed) checkMovements();
-  moveIfClipped();
-  if (lifes > 0){
-    M5.lcd.setTextSize(1);
-    M5.lcd.setCursor(310, 5);
-    M5.lcd.print(lifes);
+    pressed = false;
+    M5.update();
+    checkMovements();
+    printBg();
+    printTrees();
+    printFrog();
+    if (!pressed) checkMovements();
+    moveObjects();
+    printCars();
+    checkCollisions();
+    if (!pressed) checkMovements();
+    moveIfClipped();
+    if (lifes > 0){
+      M5.lcd.setTextSize(1);
+      M5.lcd.setCursor(310, 5);
+      M5.lcd.print(lifes);
+    }
+    else {break;}
+    delay(delayTime);
+    if (!pressed) checkMovements();
   }
-  else {break;}
-  delay(30);
-  if (!pressed) checkMovements();
-  }
-  }
+}
   
 void drawFixed(){
   M5.lcd.setBrightness(screenBl);
@@ -133,8 +135,10 @@ void drawFixed(){
   M5.lcd.setTextColor(WHITE);
   M5.lcd.setTextSize(2);
   M5.lcd.setCursor(2, 0);
-  M5.lcd.print("Frogger ODROID-GO ");
-  M5.lcd.drawFastVLine(211, 0, 17, WHITE);
+  M5.lcd.print(" Score ");
+//  M5.lcd.drawFastVLine(91, 0, 17, WHITE);
+  M5.lcd.setCursor(170, 0);
+  M5.lcd.print("Delay ");
   M5.lcd.setCursor(1, 232);
   M5.lcd.fillRect(0, 230, 320, 240, BLACK);
   printScore();
@@ -232,15 +236,23 @@ void printBg(){
 void checkMovements(){
   pressed = true;
   if (movement >= 2) movement = 0;
+  #ifdef ARDUINO_ODROID_ESP32
   if ((M5.JOY_Y.isAxisPressed() == 2) && (movement == 0)) {frog_y -= 16; movement ++; clipped = 0; delta = 0;}
   else if ((M5.JOY_Y.isAxisPressed() == 1) && (movement == 0)) {frog_y += 16; movement ++; clipped = 0; delta = 0;}
   else if ((M5.JOY_X.isAxisPressed() == 2) && (movement == 0)) {frog_x -= 16; movement ++;}
   else if ((M5.JOY_X.isAxisPressed() == 1) && (movement == 0)) {frog_x += 16; movement ++;}
+  #else
+  if ((M5.BtnA.isPressed()) && (movement == 0)) {frog_y -= 16; movement ++; clipped = 0; delta = 0;}
+  //else if ((M5.BtnA.isPressed()) && (movement == 0)) {frog_y += 16; movement ++; clipped = 0; delta = 0;}
+  else if ((M5.BtnB.isPressed()) && (movement == 0)) {frog_x -= 16; movement ++;}
+  else if ((M5.BtnC.isPressed()) && (movement == 0)) {frog_x += 16; movement ++;}
+  #endif
   else movement ++;
   if ((frog_x < 0) && (clipped == 0)) {frog_x += 16;}
   if ((frog_x > 300) && (clipped == 0)) {frog_x -= 16;}
   if ((frog_y > 233) && (clipped == 0)) {frog_y -= 16;}
   if ((frog_y < 17) && (clipped == 0)) {frog_y += 16;}
+  #ifdef ARDUINO_ODROID_ESP32
   if (M5.BtnStart.isPressed() == 1 && screenBl < 175){
     screenBl += 50;
     M5.lcd.setBrightness(screenBl);
@@ -249,6 +261,7 @@ void checkMovements(){
     screenBl -= 50;
     M5.lcd.setBrightness(screenBl);
   }
+  #endif
   //if (M5.BtnVolume.isPressed() == 1) if (!volume) {M5.Speaker.setVolume(3); volume = true;} else {M5.Speaker.setVolume(0); volume = false;}
     
   }
@@ -264,13 +277,25 @@ void printFrog(){
   }
 
 void printScore(){
-  M5.lcd.fillRect(216, 0, 65, 20, BLACK);
-  M5.lcd.setCursor(217, 0);
+  M5.lcd.fillRect(96, 0, 65, 20, BLACK);
+  M5.lcd.setCursor(97, 0);
   M5.lcd.setTextSize(2);
   M5.lcd.setTextColor(WHITE);
   M5.lcd.print(score);
-  }
-  
+  printDelayTime();
+}
+
+void printDelayTime(){
+  M5.lcd.setTextSize(2);
+  M5.lcd.setTextColor(WHITE);
+  M5.lcd.setCursor(170, 0);
+  M5.lcd.print("Delay ");
+  M5.lcd.fillRect(240, 0, 60, 20, BLACK);
+  M5.lcd.setTextColor(WHITE);
+  M5.lcd.setCursor(240, 0);
+  M5.lcd.print(delayTime);
+}
+
 void moveObjects(){
   car1_x = (car1_x + 15) % 350;
   if (car2_x < -40) car2_x += 350;
@@ -314,6 +339,12 @@ void printCars(){
   M5.lcd.fillRect(car5_x + 18, car5_y + 8, 2, 2, YELLOW);
 }
 
+void setDeleyTime(int v) {
+  delayTime=delayTime+v*10;
+  if(delayTime<10) delayTime=10;
+  printDelayTime();
+}
+
 void intro(){
   //M5.lcd.setRotation(1); //Comment out by micono
   Serial.println("Frogger by Pappani Federico");
@@ -329,7 +360,7 @@ void intro(){
   #ifdef ARDUINO_ODROID_ESP32
   M5.lcd.print("ODROID-GO Version");
   #else
-  M5.lcd.print("M5Stack Version");
+  M5.lcd.print("<M5Stack Version>");
   #endif
   M5.lcd.setCursor(63, 130);
   M5.lcd.setTextColor(RED);
@@ -348,10 +379,18 @@ void intro(){
 //delay(3000);
   while(1){
     if(M5.BtnA.isPressed() == 1) break;
+    #ifdef ARDUINO_ODROID_ESP32
+    int jy=M5.JOY_Y.wasAxisPressed();
+    if (jy == 2) setDeleyTime(1);
+    else if (jy == 1) setDeleyTime(-1);
+    #else
+    else if(M5.BtnB.wasPressed()) setDeleyTime(-1);
+    else if(M5.BtnC.wasPressed()) setDeleyTime(1);
+    #endif
     M5.update();
-    }
-  M5.update();
   }
+  M5.update();
+}
 
 void gameover(){
   M5.lcd.fillScreen(BLACK);//M5.lcd.fillScreen(BLACK);
@@ -365,14 +404,14 @@ void gameover(){
   //  Serial.println("Score updated!");
   //  highestScore = score;
   //  }
-  delay(3000);
+  delay(2000);
   delta = 0;
   clipped = false;
   M5.lcd.fillScreen(BLACK);
   score = 0;
   dead();
   lifes = 3;
-  }
+}
 
 void win(){
   score += 100;
