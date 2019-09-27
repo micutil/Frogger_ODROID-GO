@@ -27,7 +27,7 @@
 - B button: Cancel
 - Start : Write Application F/W
 
-## Control
+## How to play
 
 #### Odroid-GO
 
