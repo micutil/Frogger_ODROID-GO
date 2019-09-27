@@ -9,11 +9,23 @@
 - Added binary for Odroid-GO
 
 ### Binary files for Launcher
-- in M5_Gamebin ... 4M minimal SPIFFS partition scheme
-- in MD_Gamebin ... 4M default partition scheme
-- in MF_Gamebin ... Fire defaut partition scheme
-- in OG_Gamebin ... Arduino program for Odroid-GO
-- in odroid/firmwares ... fw file for Odroid-GO
+- in M5_Gamebin ... 4M minimal SPIFFS partition scheme.
+- in MD_Gamebin ... 4M default partition scheme.
+- in MF_Gamebin ... Fire defaut partition scheme.
+- in OG_Gamebin ... bin file for Odroid-GO.
+- in odroid/firmwares ... fw file for Odroid-GO Menu Control.
+
+##### ODROID-GO Device Firmware Menu Controls
+
+1. Power Switch Off
+2. Hold B button, Power Switch On
+3. Release B button when device firmware Menu appears.
+
+##### Launch an app
+
+- A button: Select Application F/W
+- B button: Cancel
+- Start : Write Application F/W
 
 ## Control
 
